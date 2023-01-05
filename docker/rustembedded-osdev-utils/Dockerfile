@@ -2,6 +2,7 @@
 ##
 ## Copyright (c) 2017-2022 Andre Richter <andre.o.richter@gmail.com>
 ## Copyright (c) 2019-2022 Nao Taco <naotaco@gmail.com>
+## Copyright (c) 2023 YuLong Yao <feilongphone@gmail.com>
 FROM ubuntu:20.04
 
 ARG VCS_REF
@@ -59,7 +60,8 @@ RUN set -ex;                                      \
     git clone https://gitlab.com/qemu-project/qemu.git;        \
     cd qemu;                                                   \
     git checkout tags/v6.1.0;                                  \
-    ./configure --target-list=aarch64-softmmu --enable-modules \
+    ./configure --target-list=aarch64-softmmu,riscv64-softmmu  \
+        --enable-modules \
         --enable-tcg-interpreter --enable-debug-tcg            \
         --python=/usr/bin/python3;                             \
     make -j10;                                                 \
