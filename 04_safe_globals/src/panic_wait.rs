@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Copyright (c) 2018-2022 Andre Richter <andre.o.richter@gmail.com>
+// Copyright (c) 2023 YuLong Yao <feilongphone@gmail.com>
 
 //! A panic handler that infinitely waits.
 
@@ -23,10 +24,29 @@ use core::panic::PanicInfo;
 ///
 /// [`AtomicBool::load`]: core::sync::atomic::AtomicBool::load
 /// [`AtomicBool::store`]: core::sync::atomic::AtomicBool::store
+#[cfg(target_arch = "aarch64")]
 fn panic_prevent_reenter() {
     use core::sync::atomic::{AtomicBool, Ordering};
 
     #[cfg(not(target_arch = "aarch64"))]
+    compile_error!("Add the target_arch to above's check if the following code is safe to use");
+
+    static PANIC_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
+
+    if !PANIC_IN_PROGRESS.load(Ordering::Relaxed) {
+        PANIC_IN_PROGRESS.store(true, Ordering::Relaxed);
+
+        return;
+    }
+
+    cpu::wait_forever()
+}
+
+#[cfg(target_arch = "riscv64")]
+fn panic_prevent_reenter() {
+    use core::sync::atomic::{AtomicBool, Ordering};
+
+    #[cfg(not(target_arch = "riscv64"))]
     compile_error!("Add the target_arch to above's check if the following code is safe to use");
 
     static PANIC_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
