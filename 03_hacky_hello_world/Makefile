@@ -1,6 +1,7 @@
 ## SPDX-License-Identifier: MIT OR Apache-2.0
 ##
 ## Copyright (c) 2018-2022 Andre Richter <andre.o.richter@gmail.com>
+## Copyright (c) 2022-2023 YuLong Yao <feilongphone@gmail.com>
 
 include ../common/docker.mk
 include ../common/format.mk
@@ -42,6 +43,17 @@ else ifeq ($(BSP),rpi4)
     READELF_BINARY    = aarch64-none-elf-readelf
     LD_SCRIPT_PATH    = $(shell pwd)/src/bsp/raspberrypi
     RUSTC_MISC_ARGS   = -C target-cpu=cortex-a72
+else ifeq ($(BSP),mangopi_mq_pro)
+    TARGET            = riscv64gc-unknown-none-elf
+    KERNEL_BIN        = kernel8.img
+    QEMU_BINARY       = qemu-system-riscv64
+    QEMU_MACHINE_TYPE = virt
+    QEMU_RELEASE_ARGS = -serial mon:stdio -display none -bios none
+    OBJDUMP_BINARY    = riscv64-unknown-elf-objdump
+    NM_BINARY         = riscv64-unknown-elf-nm
+    READELF_BINARY    = riscv64-unknown-elf-readelf
+    LD_SCRIPT_PATH    = $(shell pwd)/src/bsp/mangopi_mq_pro
+    RUSTC_MISC_ARGS   =
 endif
 
 # Export for build.rs.
@@ -56,7 +68,7 @@ KERNEL_MANIFEST      = Cargo.toml
 KERNEL_LINKER_SCRIPT = kernel.ld
 LAST_BUILD_CONFIG    = target/$(BSP).build_config
 
-KERNEL_ELF      = target/$(TARGET)/release/kernel
+KERNEL_ELF      = target/$(TARGET)/debug/kernel
 # This parses cargo's dep-info file.
 # https://doc.rust-lang.org/cargo/guide/build-cache.html#dep-info-files
 KERNEL_ELF_DEPS = $(filter-out %: ,$(file < $(KERNEL_ELF).d)) $(KERNEL_MANIFEST) $(LAST_BUILD_CONFIG)
@@ -68,6 +80,7 @@ KERNEL_ELF_DEPS = $(filter-out %: ,$(file < $(KERNEL_ELF).d)) $(KERNEL_MANIFEST)
 ##--------------------------------------------------------------------------------------------------
 RUSTFLAGS = $(RUSTC_MISC_ARGS)                   \
     -C link-arg=--library-path=$(LD_SCRIPT_PATH) \
+    -C link-arg=-Map=$(KERNEL_ELF).map           \
     -C link-arg=--script=$(KERNEL_LINKER_SCRIPT)
 
 RUSTFLAGS_PEDANTIC = $(RUSTFLAGS) \
@@ -76,8 +89,7 @@ RUSTFLAGS_PEDANTIC = $(RUSTFLAGS) \
 
 FEATURES      = --features bsp_$(BSP)
 COMPILER_ARGS = --target=$(TARGET) \
-    $(FEATURES)                    \
-    --release
+    $(FEATURES)
 
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
 DOC_CMD     = cargo doc $(COMPILER_ARGS)
@@ -93,7 +105,7 @@ EXEC_TEST_DISPATCH = ruby ../common/tests/dispatch.rb
 ## Dockerization
 ##------------------------------------------------------------------------------
 DOCKER_CMD            = docker run -t --rm -v $(shell pwd):/work/tutorial -w /work/tutorial
-DOCKER_CMD_INTERACT   = $(DOCKER_CMD) -i
+DOCKER_CMD_INTERACT   = $(DOCKER_CMD) -i -p 1234:1234
 DOCKER_ARG_DIR_COMMON = -v $(shell pwd)/../common:/work/common
 
 # DOCKER_IMAGE defined in include file (see top of this file).
@@ -151,11 +163,19 @@ ifeq ($(QEMU_MACHINE_TYPE),) # QEMU is not supported for the board.
 qemu:
 	$(call color_header, "$(QEMU_MISSING_STRING)")
 
+qemudebug:
+	$(call color_header, "$(QEMU_MISSING_STRING)")
+
 else # QEMU is supported.
 
 qemu: $(KERNEL_BIN)
 	$(call color_header, "Launching QEMU")
 	@$(DOCKER_QEMU) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
+
+qemudebug: $(KERNEL_BIN)
+	$(call color_header, "Launching QEMU")
+	@$(DOCKER_QEMU) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN) -s -S
+
 endif
 
 ##------------------------------------------------------------------------------
