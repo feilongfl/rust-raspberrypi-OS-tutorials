@@ -48,7 +48,7 @@ else ifeq ($(BSP),mangopi_mq_pro)
     KERNEL_BIN        = kernel8.img
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
-    QEMU_RELEASE_ARGS = -serial mon:stdio -display none -bios none
+    QEMU_RELEASE_ARGS = -serial mon:stdio -display none
     OBJDUMP_BINARY    = riscv64-unknown-elf-objdump
     NM_BINARY         = riscv64-unknown-elf-nm
     READELF_BINARY    = riscv64-unknown-elf-readelf

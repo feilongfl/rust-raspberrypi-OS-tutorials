@@ -14,8 +14,10 @@
 
 use core::arch::global_asm;
 
+static OPENSBI_HART_LOTTERY: u32 = 0;
+
 // Assembly counterpart to this file.
-global_asm!(include_str!("boot.s"),);
+global_asm!(include_str!("boot.s"), OPENSBI_HART_LOTTERY = sym OPENSBI_HART_LOTTERY);
 
 //--------------------------------------------------------------------------------------------------
 // Public Code
