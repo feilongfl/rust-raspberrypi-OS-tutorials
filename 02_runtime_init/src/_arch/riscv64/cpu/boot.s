@@ -18,12 +18,12 @@ _start:
 	// Only proceed on the boot core. Park it otherwise.
 	// OpenSBI will choose one core to boot first,
 	// and the other cores will be parked until `ipi` interrupt is arrive.
-	lla	a3, {OPENSBI_HART_LOTTERY}
-	li	a2, 1
-	amoadd.w a3, a2, (a3)
+	lla	t0, {OPENSBI_HART_LOTTERY}
+	li	t1, 1
+	amoadd.w t0, t1, (t0)
 	// If the return value is 0, then this is the boot core.
 	// Otherwise, loop infinitely.
-	bnez	a3, .L_parking_loop
+	bnez	t0, .L_parking_loop
 
 L_boot_first_core:
 	// Initialize DRAM.

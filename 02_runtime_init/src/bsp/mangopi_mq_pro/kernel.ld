@@ -6,7 +6,7 @@
 __rpi_phys_dram_start_addr = 0;
 
 /* The physical address at which the the kernel binary will be loaded by the Raspberry's firmware */
-__rpi_phys_binary_load_addr = 0x80000000;
+__rpi_phys_binary_load_addr = 0x80200000;
 
 
 ENTRY(__rpi_phys_binary_load_addr)
