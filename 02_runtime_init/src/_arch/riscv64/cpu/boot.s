@@ -16,10 +16,14 @@
 //------------------------------------------------------------------------------
 _start:
 	// Only proceed on the boot core. Park it otherwise.
-	csrr a0, mhartid
-	beqz a0, L_boot_first_core
-	// If execution reaches here, it is the boot core.
-	j	.L_parking_loop
+	// OpenSBI will choose one core to boot first,
+	// and the other cores will be parked until `ipi` interrupt is arrive.
+	lla	a3, {OPENSBI_HART_LOTTERY}
+	li	a2, 1
+	amoadd.w a3, a2, (a3)
+	// If the return value is 0, then this is the boot core.
+	// Otherwise, loop infinitely.
+	bnez	a3, .L_parking_loop
 
 L_boot_first_core:
 	// Initialize DRAM.
