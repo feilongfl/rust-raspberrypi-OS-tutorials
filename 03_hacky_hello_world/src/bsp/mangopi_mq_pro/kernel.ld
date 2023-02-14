@@ -4,7 +4,7 @@
  * Copyright (c) 2022-2023 YuLong Yao <feilongphone@gmail.com>
  */
 
-_program_start = 0x80200000;
+_program_start = 0x46000000;
 
 /* The physical address at which the the kernel binary will be loaded by the Raspberry's firmware */
 _stack_size = 2048;

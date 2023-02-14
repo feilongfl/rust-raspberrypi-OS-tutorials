@@ -6,7 +6,7 @@
 //! BSP console facilities.
 
 use crate::console;
-use core::fmt;
+use core::{arch::asm, fmt};
 
 //--------------------------------------------------------------------------------------------------
 // Private Definitions
@@ -19,6 +19,20 @@ struct QEMUOutput;
 // Private Code
 //--------------------------------------------------------------------------------------------------
 
+static SBI_EXT_0_1_CONSOLE_PUTCHAR: usize = 0x1;
+fn sbi_call(eid: usize, fid: usize, arg0: usize, arg1: usize, arg2: usize) -> usize {
+    let ret;
+    unsafe {
+        asm!("ecall",
+             inout("a0") arg0 => ret,
+                in("a1") arg1,
+                in("a2") arg2,
+                in("a7") eid,
+                in("a6") fid,
+        );
+    }
+    ret
+}
 /// Implementing `core::fmt::Write` enables usage of the `format_args!` macros, which in turn are
 /// used to implement the `kernel`'s `print!` and `println!` macros. By implementing `write_str()`,
 /// we get `write_fmt()` automatically.
@@ -29,9 +43,7 @@ struct QEMUOutput;
 impl fmt::Write for QEMUOutput {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
-            unsafe {
-                core::ptr::write_volatile(0x10000000 as *mut u8, c as u8);
-            }
+            sbi_call(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, c as usize, 0, 0);
         }
 
         Ok(())

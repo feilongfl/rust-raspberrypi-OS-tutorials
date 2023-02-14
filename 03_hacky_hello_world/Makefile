@@ -237,4 +237,16 @@ test_boot: $(KERNEL_BIN)
 
 test: test_boot
 
+UART ?= /dev/ttyUSB0
+RAM_ADDR ?= 0x46000000
+
+$(KERNEL_BIN).script: $(KERNEL_BIN)
+	hexdump -ve '"46%06_ax " 1/4 "%08X" "\n"' $< > $@
+
+uartboot: $(KERNEL_BIN).script
+	echo -e 'led 0 1\n' > $(UART)
+	cat $< | xargs -I % sh -c '{ echo w32 %; echo w32 % > $(UART); sleep 0.001; }'
+	echo -e 'led 0 0\n' > $(UART)
+	echo -e 'boot $(RAM_ADDR)\n' > $(UART)
+
 endif
