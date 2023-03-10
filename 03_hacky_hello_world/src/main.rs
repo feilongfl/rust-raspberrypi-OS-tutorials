@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Copyright (c) 2018-2022 Andre Richter <andre.o.richter@gmail.com>
+// Copyright (c) 2022-2023 YuLong Yao <feilongphone@gmail.com>
 
 // Rust embedded logo for `make doc`.
 #![doc(
@@ -107,6 +108,7 @@
 //! 2. Once finished with architectural setup, the arch code calls `kernel_init()`.
 
 #![feature(asm_const)]
+#![feature(asm_sym)]
 #![feature(format_args_nl)]
 #![feature(panic_info_message)]
 #![no_main]
