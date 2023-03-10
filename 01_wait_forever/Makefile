@@ -1,6 +1,7 @@
 ## SPDX-License-Identifier: MIT OR Apache-2.0
 ##
 ## Copyright (c) 2018-2022 Andre Richter <andre.o.richter@gmail.com>
+## Copyright (c) 2022-2023 YuLong Yao <feilongphone@gmail.com>
 
 include ../common/docker.mk
 include ../common/format.mk
@@ -42,6 +43,17 @@ else ifeq ($(BSP),rpi4)
     READELF_BINARY    = aarch64-none-elf-readelf
     LD_SCRIPT_PATH    = $(shell pwd)/src/bsp/raspberrypi
     RUSTC_MISC_ARGS   = -C target-cpu=cortex-a72
+else ifeq ($(BSP),riscv64)
+    TARGET            = riscv64gc-unknown-none-elf
+    KERNEL_BIN        = kernel8.img
+    QEMU_BINARY       = qemu-system-riscv64
+    QEMU_MACHINE_TYPE = virt
+    QEMU_RELEASE_ARGS = -d in_asm -display none -serial mon:stdio
+    OBJDUMP_BINARY    = riscv64-unknown-elf-objdump
+    NM_BINARY         = riscv64-unknown-elf-nm
+    READELF_BINARY    = riscv64-unknown-elf-readelf
+    LD_SCRIPT_PATH    = $(shell pwd)/src/bsp/riscv64
+    RUSTC_MISC_ARGS   =
 endif
 
 # Export for build.rs.
@@ -98,7 +110,7 @@ DOCKER_CMD_INTERACT = $(DOCKER_CMD) -i
 DOCKER_QEMU  = $(DOCKER_CMD_INTERACT) $(DOCKER_IMAGE)
 DOCKER_TOOLS = $(DOCKER_CMD) $(DOCKER_IMAGE)
 
-
+QEMU_CMD = $(DOCKER_QEMU) $(EXEC_QEMU)
 
 ##--------------------------------------------------------------------------------------------------
 ## Targets
@@ -152,7 +164,7 @@ else # QEMU is supported.
 
 qemu: $(KERNEL_BIN)
 	$(call color_header, "Launching QEMU")
-	@$(DOCKER_QEMU) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
+	$(QEMU_CMD) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
 endif
 
 ##------------------------------------------------------------------------------
